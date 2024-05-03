@@ -38,10 +38,9 @@ public class new_teleop1 extends LinearOpMode{
         drone = hardwareMap.servo.get("drone");
         IMU imu = hardwareMap.get(IMU.class, "imu");
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        //TODO: change these parameters after control hub installation.
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
+                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP));
         imu.initialize(parameters);
 
         waitForStart();
@@ -56,7 +55,7 @@ public class new_teleop1 extends LinearOpMode{
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference.
             // The equivalent button is start on Xbox-style controllers.
-            if (gamepad1.options) {
+            if (gamepad1.left_bumper) {
                 imu.resetYaw();
             }
 
@@ -77,10 +76,10 @@ public class new_teleop1 extends LinearOpMode{
             double frontRightPower = (rotY - rotX - rx) / denominator;
             double backRightPower = (rotY + rotX - rx) / denominator;
 
-            frontLeftMotor.setPower(frontLeftPower);
-            backLeftMotor.setPower(backLeftPower);
-            frontRightMotor.setPower(frontRightPower);
-            backRightMotor.setPower(backRightPower);
+            frontLeftMotor.setPower(0.75 * frontLeftPower);
+            backLeftMotor.setPower(0.75 * backLeftPower);
+            frontRightMotor.setPower(0.75 * frontRightPower);
+            backRightMotor.setPower(0.75 * backRightPower);
 
             if (gamepad1.a){
                 intake.setPower(0.6);
