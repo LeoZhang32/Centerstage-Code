@@ -13,11 +13,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @TeleOp
 public class new_teleop1 extends LinearOpMode {
-    Gamepad currentGamepad1 = new Gamepad();
-    Gamepad currentGamepad2 = new Gamepad();
+    private final StickyGamepad stickyGamepad1;
+    private final StickyGamepad stickyGamepad2;
 
-    Gamepad previousGamepad1 = new Gamepad();
-    Gamepad previousGamepad2 = new Gamepad();
+    public new_teleop1(Gamepad gampepad1, Gamepad gamepad2) {
+        this.stickyGamepad1 = new StickyGamepad(gampepad1);
+        this.stickyGamepad2 = new StickyGamepad(gamepad2);
+    }
+
     DcMotor intake;
     DcMotor rightViper;
     DcMotor leftViper;
@@ -34,16 +37,13 @@ public class new_teleop1 extends LinearOpMode {
     String[] wrist_positions = {"0", "1", "2", "3"};
     Integer x = 0;
     String wrist_position = wrist_positions[x];
-    boolean wrist_is_0 = true;
-    Boolean wrist_is_1 = false;
-    Boolean wrist_is_2 = false;
-    Boolean wrist_is_3 = false;
-    Boolean dpad_right_pressed = false;
-    Boolean dpad_left_pressed = false;
     Boolean elbow_position_score = false;
     Boolean elbow_button_pressed = false;
     Boolean claw_open = true;
     Boolean claw_button_pressed = false;
+    Boolean drone_button_pressed = false;
+    Boolean drone_launched = false;
+
     @Override
     public void runOpMode() throws InterruptedException {
         intake = hardwareMap.dcMotor.get("intake");
@@ -77,15 +77,6 @@ public class new_teleop1 extends LinearOpMode {
             // This is equivalent to doing this at the end of the previous
             // loop iteration, as it will run in the same order except for
             // the first/last iteration of the loop.
-            previousGamepad1.copy(currentGamepad1);
-            previousGamepad2.copy(currentGamepad2);
-
-            // Store the gamepad values from this loop iteration in
-            // currentGamepad1/2 to be used for the entirety of this loop iteration.
-            // This prevents the gamepad values from changing between being
-            // used and stored in previousGamepad1/2.
-            currentGamepad1.copy(gamepad1);
-            currentGamepad2.copy(gamepad2);
             double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
             double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
@@ -119,12 +110,12 @@ public class new_teleop1 extends LinearOpMode {
             frontRightMotor.setPower(0.75 * frontRightPower);
             backRightMotor.setPower(0.75 * backRightPower);
 
-            if (gamepad1.a) {
-                intake.setPower(0.6);
+            if (gamepad1.right_bumper) {
                 intake_drop.setPosition(1);
+                intake.setPower(0.6);
             } else {
-                intake.setPower(0);
                 intake_drop.setPosition(0.5);
+                intake.setPower(0);
             }
             if (gamepad1.dpad_up) {
                 leftViper.setPower(1);
@@ -136,28 +127,51 @@ public class new_teleop1 extends LinearOpMode {
                 leftViper.setPower(0);
                 rightViper.setPower(0);
             }
-            if (currentGamepad1.a && !previousGamepad1.a) {
-                if (gamepad1.dpad_right){
-                    x += 1;
-                    wrist_position = wrist_positions[(int) x];
-                }
+//            if (gamepad2.y) {
+//                if (!drone_button_pressed) {
+//                    drone_launched = !drone_launched;
+//                }
+//                drone_button_pressed = true;
+//            } else drone_button_pressed = false;
+//            if (currentGamepad1.a && !previousGamepad1.a) {
+//                if (gamepad1.dpad_right){
+//                    x += 1;
+//                    wrist_position = wrist_positions[(int) x];
+//                }
+//            }
+//            claw_elbow.setPosition(0);
+
+//            updateBooleans();
+            if (stickyGamepad2.y){
+                drone.setPosition(0.7);
             }
-            claw_elbow.setPosition(0);
-            updateBooleans();
-        }
-    }
-    public void updateBooleans() {
-        if (wrist_position.equals(String.valueOf(0))) {
-            claw_wrist.setPosition(0);
-        }
-        else if (wrist_position.equals(String.valueOf(1))) {
-            claw_wrist.setPosition(0.2);
-        }
-        else if (wrist_position.equals(String.valueOf(2))) {
-            claw_wrist.setPosition(0.4);
-        }
-        else if (wrist_position.equals(String.valueOf(3))){
-            claw_wrist.setPosition(0.6);
+            else{
+                drone.setPosition(0);
+            }
+            stickyGamepad1.update();
+            stickyGamepad2.update();
         }
     }
 }
+//    public void updateBooleans() {
+//        if (drone_launched){
+//            drone.setPosition(0.7);
+//        }
+//        else {
+//            drone.setPosition(0);
+//        }
+////        if (wrist_position.equals(String.valueOf(0))) {
+////            claw_wrist.setPosition(0);
+////        }
+////        else if (wrist_position.equals(String.valueOf(1))) {
+////            claw_wrist.setPosition(0.2);
+////        }
+////        else if (wrist_position.equals(String.valueOf(2))) {
+////            claw_wrist.setPosition(0.4);
+////        }
+////        else if (wrist_position.equals(String.valueOf(3))){
+////            claw_wrist.setPosition(0.6);
+////        }
+//
+//    }
+//}
