@@ -8,18 +8,11 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.IMU;
-
+import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @TeleOp
 public class new_teleop1 extends LinearOpMode {
-    private final StickyGamepad stickyGamepad1;
-    private final StickyGamepad stickyGamepad2;
-
-    public new_teleop1(Gamepad gampepad1, Gamepad gamepad2) {
-        this.stickyGamepad1 = new StickyGamepad(gampepad1);
-        this.stickyGamepad2 = new StickyGamepad(gamepad2);
-    }
 
     DcMotor intake;
     DcMotor rightViper;
@@ -34,15 +27,16 @@ public class new_teleop1 extends LinearOpMode {
     Servo drone;
     Servo intake_drop;
     //booleans
-    String[] wrist_positions = {"0", "1", "2", "3"};
+    Double[] wrist_positions = {0.0, 0.2, 0.3, 0.4};
     Integer x = 0;
-    String wrist_position = wrist_positions[x];
     Boolean elbow_position_score = false;
     Boolean elbow_button_pressed = false;
     Boolean claw_open = true;
     Boolean claw_button_pressed = false;
     Boolean drone_button_pressed = false;
     Boolean drone_launched = false;
+    Boolean wristHoriz = false;
+    Boolean wristPressed = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -61,7 +55,6 @@ public class new_teleop1 extends LinearOpMode {
         IMU imu = hardwareMap.get(IMU.class, "imu");
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
                 RevHubOrientationOnRobot.UsbFacingDirection.UP));
@@ -71,34 +64,36 @@ public class new_teleop1 extends LinearOpMode {
 
         if (isStopRequested()) return;
 
-        while (opModeIsActive()) {
-            // Store the gamepad values from the previous loop iteration in
-            // previousGamepad1/2 to be used in this loop iteration.
-            // This is equivalent to doing this at the end of the previous
-            // loop iteration, as it will run in the same order except for
-            // the first/last iteration of the loop.
-            double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
+        while (!isStopRequested()&&opModeIsActive()) {
+            //lastWristPressTime = System.currentTimeMillis();
+//            long now = System.currentTimeMillis();
+//            long gap = now- lastWristPressTime;
+//            if (gap > 200) {
+//                if (x!=3){
+//                    x+=1;
+//                }
+//                else {
+//                    x = 0;
+//                }
+//                claw_wrist.setPosition(wrist_positions[(int) x]);
+//            }
+
+            //drivetrain
+            double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
 
-            // This button choice was made so that it is hard to hit on accident,
-            // it can be freely changed based on preference.
-            // The equivalent button is start on Xbox-style controllers.
-            if (gamepad1.left_bumper) {
+            if (gamepad1.dpad_up) {
                 imu.resetYaw();
             }
 
             double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 
-            // Rotate the movement direction counter to the bot's rotation
             double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
             double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
 
             rotX = rotX * 1.1;  // Counteract imperfect strafing
 
-            // Denominator is the largest motor power (absolute value) or 1
-            // This ensures all the powers maintain the same ratio,
-            // but only if at least one is out of the range [-1, 1]
             double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(rx), 1);
             double frontLeftPower = (rotY + rotX + rx) / denominator;
             double backLeftPower = (rotY - rotX + rx) / denominator;
@@ -110,29 +105,57 @@ public class new_teleop1 extends LinearOpMode {
             frontRightMotor.setPower(0.75 * frontRightPower);
             backRightMotor.setPower(0.75 * backRightPower);
 
+            //intake
             if (gamepad1.right_bumper) {
-                intake_drop.setPosition(1);
-                intake.setPower(0.6);
+                intake_drop.setPosition(0.9);
+                intake.setPower(0.45);
+            } else if (gamepad1.left_bumper) {
+                intake_drop.setPosition(0.9);
+                intake.setPower(-0.45);
             } else {
-                intake_drop.setPosition(0.5);
+                intake_drop.setPosition(0.4);
                 intake.setPower(0);
             }
-            if (gamepad1.dpad_up) {
+
+            //viper slides
+            if (gamepad2.dpad_up) {
                 leftViper.setPower(1);
                 rightViper.setPower(-1);
-            } else if (gamepad1.dpad_down) {
+            } else if (gamepad2.dpad_down) {
                 leftViper.setPower(-1);
                 rightViper.setPower(1);
             } else {
                 leftViper.setPower(0);
                 rightViper.setPower(0);
             }
-//            if (gamepad2.y) {
-//                if (!drone_button_pressed) {
-//                    drone_launched = !drone_launched;
-//                }
-//                drone_button_pressed = true;
-//            } else drone_button_pressed = false;
+
+            //Sticky key presses
+            if (gamepad2.y) {
+                if (!drone_button_pressed) {
+                    drone_launched = !drone_launched;
+                }
+                drone_button_pressed = true;
+            } else drone_button_pressed = false;
+            if (gamepad2.x){
+                if (!elbow_button_pressed) {
+                    elbow_position_score = !elbow_position_score;
+                }
+                elbow_button_pressed = true;
+            } else elbow_button_pressed = false;
+            if (gamepad2.a){
+                if (!claw_button_pressed){
+                    claw_open = !claw_open;
+                }
+                claw_button_pressed= true;
+            } else claw_button_pressed = false;
+            if (elbow_position_score){
+                if (gamepad2.b){
+                    if (!wristPressed){
+                    wristHoriz = !wristHoriz;
+                    }
+                wristPressed= true;
+                } else wristPressed = false;
+            }
 //            if (currentGamepad1.a && !previousGamepad1.a) {
 //                if (gamepad1.dpad_right){
 //                    x += 1;
@@ -142,36 +165,43 @@ public class new_teleop1 extends LinearOpMode {
 //            claw_elbow.setPosition(0);
 
 //            updateBooleans();
-            if (stickyGamepad2.y){
-                drone.setPosition(0.7);
-            }
-            else{
-                drone.setPosition(0);
-            }
-            stickyGamepad1.update();
-            stickyGamepad2.update();
+//            if (stickyGamepad2.y){
+//                drone.setPosition(0.7);
+//            }
+//            else{
+//                drone.setPosition(0);
+//            }
+//            stickyGamepad1.update();
+//            stickyGamepad2.update();
+            updateBooleans();
+
+        }
+    }
+    public void updateBooleans() {
+        if (drone_launched){
+            drone.setPosition(0.7);
+        }
+        else {
+            drone.setPosition(0);
+        }
+        if (elbow_position_score){
+            claw_elbow.setPosition(0.45);
+        }
+        else {
+            claw_elbow.setPosition(0.225);
+            wristHoriz = Boolean.FALSE;
+        }
+        if (claw_open){
+            claw.setPosition(0);
+        }
+        else{
+            claw.setPosition(0.5);
+        }
+        if (wristHoriz){
+            claw_wrist.setPosition(0.35);
+        }
+        else{
+            claw_wrist.setPosition(0);
         }
     }
 }
-//    public void updateBooleans() {
-//        if (drone_launched){
-//            drone.setPosition(0.7);
-//        }
-//        else {
-//            drone.setPosition(0);
-//        }
-////        if (wrist_position.equals(String.valueOf(0))) {
-////            claw_wrist.setPosition(0);
-////        }
-////        else if (wrist_position.equals(String.valueOf(1))) {
-////            claw_wrist.setPosition(0.2);
-////        }
-////        else if (wrist_position.equals(String.valueOf(2))) {
-////            claw_wrist.setPosition(0.4);
-////        }
-////        else if (wrist_position.equals(String.valueOf(3))){
-////            claw_wrist.setPosition(0.6);
-////        }
-//
-//    }
-//}

@@ -8,29 +8,29 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp
 public class old_teleop extends LinearOpMode {
-        Servo claw;
-        Servo clawPivot;
-        Servo droneLauncher;
-        Servo hookTurn;
-        DcMotor intake;
-        DcMotor ViperSlideRight;
-        DcMotor hangPulley;
-        DcMotor frontLeftMotor;
-        DcMotor backLeftMotor;
-        DcMotor frontRightMotor;
-        DcMotor backRightMotor;
-        Boolean clawOpen = true;
-        Boolean aIsPressed = false;
-        Boolean rightBumperIsPressed = false;
-        Boolean invertControlsOn = false;
-        Boolean yIsPressed = false;
-        Boolean droneLaunched = false;
-        Boolean leftBumperIsPressed = false;
-        Boolean slowModeOn = false;
-        Boolean bIsPressed = false;
-        Boolean clawScorePosition = false;
-        Boolean xIsPressed = false;
-        Boolean hookReady = false;
+    Servo claw;
+    Servo clawPivot;
+    Servo droneLauncher;
+    Servo hookTurn;
+    DcMotor intake;
+    DcMotor ViperSlideRight;
+    DcMotor hangPulley;
+    DcMotor frontLeftMotor;
+    DcMotor backLeftMotor;
+    DcMotor frontRightMotor;
+    DcMotor backRightMotor;
+    Boolean clawOpen = true;
+    Boolean aIsPressed = false;
+    Boolean rightBumperIsPressed = false;
+    Boolean invertControlsOn = false;
+    Boolean yIsPressed = false;
+    Boolean droneLaunched = false;
+    Boolean leftBumperIsPressed = false;
+    Boolean slowModeOn = false;
+    Boolean bIsPressed = false;
+    Boolean clawScorePosition = false;
+    Boolean xIsPressed = false;
+    Boolean hookReady = false;
     @Override
     public void runOpMode() throws InterruptedException {
         intake = hardwareMap.dcMotor.get("intake");
