@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
+import androidx.annotation.NonNull;
+
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
@@ -8,6 +11,8 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.openftc.easyopencv.OpenCvCamera;
@@ -23,21 +28,95 @@ public class AutoCV extends LinearOpMode {
      * If program has a build folder error try clearing the build
      */
     OpenCvWebcam camera;
+    public class Claw {
+        public Servo claw;
+
+        public Claw(HardwareMap hardwareMap) {
+            claw = hardwareMap.get(Servo.class, "claw");
+        }
+        public class OpenClaw implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                claw.setPosition(0);
+                return false;
+            }
+        }
+        public Action openClaw() {
+            return new OpenClaw();
+        }
+        public class CloseClaw implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                claw.setPosition(0.5);
+                return false;
+            }
+        }
+
+        public Action closeClaw() {
+            return new CloseClaw();
+        }
+    }
+    public class IntakeDrop {
+        public Servo intake_drop;
+
+        public IntakeDrop(HardwareMap hardwareMap) {
+            intake_drop = hardwareMap.get(Servo.class, "intake_drop");
+        }
+        public class PullUp implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                intake_drop.setPosition(0);
+                return false;
+            }
+        }
+        public Action pullUp() {
+            return new PullUp();
+        }
+        public class Drop implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                intake_drop.setPosition(0.9);
+                return false;
+            }
+        }
+
+        public Action dropIntake() {
+            return new Drop();
+        }
+
+        
+    }
 
     @Override
-    public void runOpMode() throws InterruptedException {
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(11.8, 61.7, Math.toRadians(90)));
+    public void runOpMode(){
+        Action trajectoryActionChosen;
+        Claw claw = new Claw(hardwareMap);
+        IntakeDrop intake_drop = new IntakeDrop(hardwareMap);
+        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(11.8, 61.7, Math.toRadians(-90)));
+        Servo claw_wrist;
+        Servo claw_elbow;
+        Servo drone;
         Action trajectoryAction1;
         Action trajectoryAction2;
         Action trajectoryAction3;
         trajectoryAction1 = drive.actionBuilder(drive.pose)
-                .lineToY(70)
+                .lineToY(40)
+                .setTangent(45)
+                .build();
+        trajectoryAction2 = drive.actionBuilder(drive.pose)
+                .lineToY(40)
+                .build();
+        trajectoryAction3 = drive.actionBuilder(drive.pose)
+                .lineToY(40)
+                .setTangent(-45)
                 .build();
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
         OpenCVDetection detector = new OpenCVDetection(telemetry);
         camera.setPipeline(detector);
-        camera.setMillisecondsPermissionTimeout(5000); // Timeout for obtaining permission is configurable. Set |
+        camera.setMillisecondsPermissionTimeout(5000);
+
+        // Timeout for obtaining permission is configurable. Set |
         /*
          * Below is an example of a lambda expression which is in simply an anonymous function.
          * Since we are only executing one statement we are able to remove the curly braces and semicolon
@@ -78,12 +157,11 @@ public class AutoCV extends LinearOpMode {
             }
         });
 
-        FtcDashboard.getInstance().startCameraStream(camera, 0);
+        FtcDashboard.getInstance().startCameraStream(camera, 60);
 
         waitForStart();
         if (isStopRequested()) return;
 
-        Action trajectoryActionChosen = null;
         switch (detector.getLocation()) {
             case Left:
                 // ...
@@ -91,14 +169,22 @@ public class AutoCV extends LinearOpMode {
                 break;
             case Right:
                 // ...
+                trajectoryActionChosen = trajectoryAction2;
                 break;
             case Middle:
                 // ...
+                trajectoryActionChosen = trajectoryAction3;
                 break;
+
+            default:
+                throw new IllegalStateException("Unexpected value: " + detector.getLocation());
         }
         Actions.runBlocking(
                 new SequentialAction(
-                        trajectoryActionChosen
+                        intake_drop.pullUp(),
+                        claw.closeClaw(),
+                        trajectoryActionChosen,
+                        intake_drop.dropIntake()
                 )
         );
         camera.stopStreaming();
