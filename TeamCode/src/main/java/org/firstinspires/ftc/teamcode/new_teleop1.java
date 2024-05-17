@@ -156,23 +156,6 @@ public class new_teleop1 extends LinearOpMode {
                 wristPressed= true;
                 } else wristPressed = false;
             }
-//            if (currentGamepad1.a && !previousGamepad1.a) {
-//                if (gamepad1.dpad_right){
-//                    x += 1;
-//                    wrist_position = wrist_positions[(int) x];
-//                }
-//            }
-//            claw_elbow.setPosition(0);
-
-//            updateBooleans();
-//            if (stickyGamepad2.y){
-//                drone.setPosition(0.7);
-//            }
-//            else{
-//                drone.setPosition(0);
-//            }
-//            stickyGamepad1.update();
-//            stickyGamepad2.update();
             updateBooleans();
 
         }

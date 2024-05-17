@@ -21,7 +21,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @Config
 public class OpenCVDetection extends OpenCvPipeline {
-    public static boolean DETECT_RED = true;
+    public static boolean DETECT_RED = false;
     public static double MINIMUM_VALUES = 100;
     public static double MAXIMUM_VALUES = 255;
     public static double MINIMUM_BLUE_HUE = 100;
@@ -45,9 +45,9 @@ public class OpenCVDetection extends OpenCvPipeline {
      * ROI is an abbreviation of Region of Interest.
      * This creates a rectangle of areas in the camera where a game element may be placed
      */
-    static final Rect Left_ROI = new Rect(new Point(10, 100), new Point(105, 200));
-    static final Rect Middle_ROI = new Rect(new Point(120, 100), new Point(205, 200));
-    static final Rect Right_ROI = new Rect(new Point(220, 100), new Point(310, 200));
+    static final Rect Left_ROI = new Rect(new Point(20, 150), new Point(60, 200));
+    static final Rect Middle_ROI = new Rect(new Point(300, 150), new Point(350, 200));
+    static final Rect Right_ROI = new Rect(new Point(570, 150), new Point(620, 200));
 
     public OpenCVDetection(Telemetry t) {
         telemetry = t;
